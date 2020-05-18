@@ -13,6 +13,12 @@ void print_rule(RULE *rule) {
     if (rule == NULL) {
         printf("NULL RULE\n");
     } else {
-        printf("\nTARGET: %s\nRECIPE: %s\n", rule->target, rule->recipe);
+        printf("TARGET: %s\n", rule->target);
+        PREREQ *prereq;
+        printf("PREREQS:\n");
+        SLIST_FOREACH(prereq, rule->prereqs_list, entries) {
+            printf("-- %s\n", prereq->filename);
+        }
+        printf("RECIPE: %s\n", rule->recipe);
     }
 }

@@ -48,12 +48,13 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
     target[len-1] = '\0';
     // TODO: validate target name
 
+    startptr = endptr + 1;
     PREREQS_HEAD *prereqs = (PREREQS_HEAD *) malloc(sizeof(PREREQS_HEAD));
     SLIST_INIT(prereqs);
-
     PREREQ *prereq_node;
     char *prereq_name;
-
+    
+    // Extract prereqs
     while (*startptr != '\n') {
         if (*startptr == '\0') {
             // Invalid format
@@ -124,7 +125,9 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
 }
 
 void main(char **args, int argc) {
-    RULE_PARSER *rparser = init_rule_parser("foo: bar.c\n cc -o foo bar.c");
+    RULE_PARSER *rparser = init_rule_parser("foo: bar.c\n cc -o foo bar.c\n\nfoo2: barc2.c baz2.c\n cc -o foo2 bar2.c");
     RULE *rule = get_next_rule(rparser);
+    print_rule(rule);
+    rule = get_next_rule(rparser);
     print_rule(rule);
 }
