@@ -16,4 +16,6 @@ typedef struct rule {
 } RULE;
 
 /** Initialize a new rule with given target, empty list of prereqs. */
-RULE *init_rule(char *target);
+RULE *init_rule(char *target, PREREQS_HEAD *prereqs, char *recipe);
+
+void print_rule(RULE *rule);
