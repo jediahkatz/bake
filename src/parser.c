@@ -7,7 +7,7 @@
 RULE_PARSER *init_rule_parser(char *str) {
     RULE_PARSER *rparser = (RULE_PARSER *) malloc(sizeof(RULE_PARSER));
     if (rparser == NULL) {
-        printf("Malloc failed\n");
+        perror("Malloc failed\n");
         abort();
     }
     rparser->str = str;
@@ -40,7 +40,7 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
     len = endptr - startptr + 1;
     char *target = (char *) malloc(len);
     if (target == NULL) {
-        printf("Malloc failed\n");
+        perror("Malloc failed\n");
         abort();
     }
 
@@ -53,7 +53,7 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
     SLIST_INIT(prereqs);
     PREREQ *prereq_node;
     char *prereq_name;
-    
+
     // Extract prereqs
     while (*startptr != '\n') {
         if (*startptr == '\0') {
@@ -77,14 +77,13 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
             endptr++;
             if (*endptr == '\0') {
                 // Invalid format
-                printf("huh?\n");
                 return NULL;
             }
         }
         len = endptr - startptr + 1;
         prereq_name = (char *) malloc(len);
         if (prereq_name == NULL) {
-            printf("Malloc failed\n");
+            perror("Malloc failed\n");
             abort();
         }
         memcpy(prereq_name, startptr, len-1);
@@ -93,7 +92,7 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
         
         prereq_node = (PREREQ *) malloc(sizeof(PREREQ));
         if (prereq_node == NULL) {
-            printf("Malloc failed\n");
+            perror("Malloc failed\n");
             abort();
         }
         prereq_node->filename = prereq_name;
@@ -112,7 +111,7 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
     len = endptr - startptr + 1;
     char *recipe = (char *) malloc(len);
     if (recipe == NULL) {
-        printf("Malloc failed");
+        perror("Malloc failed");
         abort();
     }
     memcpy(recipe, startptr, len-1);
@@ -124,7 +123,7 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
     return rule;
 }
 
-void main(char **args, int argc) {
+void main(int argc, char **argv) {
     RULE_PARSER *rparser = init_rule_parser("foo: bar.c\n cc -o foo bar.c\n\nfoo2: barc2.c baz2.c\n cc -o foo2 bar2.c");
     RULE *rule = get_next_rule(rparser);
     print_rule(rule);
