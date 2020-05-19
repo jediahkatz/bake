@@ -9,7 +9,7 @@ LIBS=-lm
 _DEPS = parser.h rule.h
 DEPS = $(patsubst %,$(ODIR)/%,$(_DEPS))
 
-_OBJ = parser.c rule.c
+_OBJ = parser.c rule.c bake.c
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 

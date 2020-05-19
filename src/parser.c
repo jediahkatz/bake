@@ -12,6 +12,7 @@ RULE_PARSER *init_rule_parser(char *str) {
     }
     rparser->str = str;
     rparser->pos = str;
+    return rparser;
 }
 
 RULE *get_next_rule(RULE_PARSER *rparser) {
@@ -121,12 +122,4 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
     RULE *rule = init_rule(target, prereqs, recipe);
 
     return rule;
-}
-
-void main(int argc, char **argv) {
-    RULE_PARSER *rparser = init_rule_parser("foo: bar.c\n cc -o foo bar.c\n\nfoo2: barc2.c baz2.c\n cc -o foo2 bar2.c");
-    RULE *rule = get_next_rule(rparser);
-    print_rule(rule);
-    rule = get_next_rule(rparser);
-    print_rule(rule);
 }

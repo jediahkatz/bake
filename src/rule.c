@@ -7,6 +7,7 @@ RULE *init_rule(char *target, PREREQS_HEAD *prereqs_list, char *recipe) {
     rule->target = target;
     rule->prereqs_list = prereqs_list;
     rule->recipe = recipe;
+    return rule;
 }
 
 void print_rule(RULE *rule) {

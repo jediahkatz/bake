@@ -1,10 +1,52 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <search.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 #include "parser.h"
 
-void main(int argc, char **argv) {
+/** Recursively bake all dependencies. Then, if this target was out-of-date
+ *  (i.e., it does not exist or any of its dependencies or descendants are newer),
+ *  run the recipe for rule associated with the current target.
+ *  Returns 1 if this target was out-of-date.
+ */
+int bake(char *target) {
+    printf("baking %s\n", target);
+    ENTRY search_entry = {.key = target};
+    ENTRY *entry = hsearch(search_entry, FIND);
+    RULE *rule;
+    // Without a rule, the target file is only out-of-date if it doesn't exist
+    int target_exists = (access(target, F_OK ) != -1);
+    int out_of_date = !target_exists;
+    struct stat *target_attr = NULL;
+    if (target_exists) {
+        stat(target, target_attr);
+    }
+    if (entry != NULL) {
+        rule = entry->data;
+        PREREQ *prereq;
+        SLIST_FOREACH(prereq, rule->prereqs_list, entries) {
+            // The target file is out-of-date if any of its prerequisites are...
+            out_of_date |= bake(prereq->filename);
+            // ...or if a prerequisite's file was modified after the target file
+            if (target_exists && (access(prereq->filename, F_OK ) != -1)) {
+                struct stat *prereq_attr = NULL;
+                stat(prereq->filename, prereq_attr);
+                out_of_date |= (difftime(prereq_attr->st_mtim.tv_sec, target_attr->st_mtim.tv_sec) > 0);
+            }
+        }
+    }
+    if (out_of_date && entry != NULL) {
+        printf("%s\n", rule->recipe);
+        system(rule->recipe);
+    }
+    return out_of_date;
+}
+
+int main(int argc, char **argv) {
     // Read Bakefile into string buffer
     FILE *f = fopen("Bakefile", "rb");
     if (f == NULL) {
@@ -47,28 +89,8 @@ void main(int argc, char **argv) {
         hsearch(entry, ENTER);
     }
 
-    bake(bake_target);
-}
-
-/** Recursively bake all dependencies. Then, if this target was out-of-date
- *  (i.e., it does not exist or any of its dependencies or descendants are newer),
- *  run the recipe for rule associated with the current target.
- *  Returns 1 if this target was out-of-date.
- */
-int bake(char *target) {
-    ENTRY entry = { .key = target };
-    RULE *rule = hsearch(entry, FIND);
-    int out_of_date = 0;
-    if (rule != NULL) {
-        PREREQ *prereq;
-        SLIST_FOREACH(prereq, rule->prereqs_list, entries) {
-            out_of_date |= bake(prereq->filename);
-        }
+    if (!bake(bake_target)) {
+        printf("bake: '%s' is up to date.", bake_target);
     }
-    // Without a rule, the target file is only out-of-date if it doesn't exist
-    out_of_date |= (access(target, F_OK ) == -1);
-    if (out_of_date && rule != NULL) {
-        system(rule->recipe);
-    }
-    return out_of_date;
+    return 0;
 }
