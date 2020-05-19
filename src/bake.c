@@ -14,34 +14,36 @@
  *  Returns 1 if this target was out-of-date.
  */
 int bake(char *target) {
-    printf("baking %s\n", target);
     ENTRY search_entry = {.key = target};
     ENTRY *entry = hsearch(search_entry, FIND);
     RULE *rule;
     // Without a rule, the target file is only out-of-date if it doesn't exist
     int target_exists = (access(target, F_OK ) != -1);
     int out_of_date = !target_exists;
-    struct stat *target_attr = NULL;
+    struct stat target_attr, prereq_attr;
     if (target_exists) {
-        stat(target, target_attr);
+        stat(target, &target_attr);
     }
     if (entry != NULL) {
         rule = entry->data;
         PREREQ *prereq;
+        // TODO: prevent duplicate calls to bake (i.e. if underlying graph is not a tree)
         SLIST_FOREACH(prereq, rule->prereqs_list, entries) {
             // The target file is out-of-date if any of its prerequisites are...
             out_of_date |= bake(prereq->filename);
             // ...or if a prerequisite's file was modified after the target file
             if (target_exists && (access(prereq->filename, F_OK ) != -1)) {
-                struct stat *prereq_attr = NULL;
-                stat(prereq->filename, prereq_attr);
-                out_of_date |= (difftime(prereq_attr->st_mtim.tv_sec, target_attr->st_mtim.tv_sec) > 0);
+                stat(prereq->filename, &prereq_attr);
+                out_of_date |= (difftime(prereq_attr.st_mtime, target_attr.st_mtime) > 0);
             }
         }
     }
     if (out_of_date && entry != NULL) {
         printf("%s\n", rule->recipe);
         system(rule->recipe);
+    }
+    if (out_of_date) {
+        printf("Re-baking %s\n", target);
     }
     return out_of_date;
 }
@@ -88,9 +90,15 @@ int main(int argc, char **argv) {
         // TODO: check for duplicates?
         hsearch(entry, ENTER);
     }
+    free(rparser->str);
+    free(rparser);
 
     if (!bake(bake_target)) {
-        printf("bake: '%s' is up to date.", bake_target);
+        printf("bake: '%s' is up to date.\n", bake_target);
     }
+    
+    // Note: this does not free the RULE structs
+    // But program exits now so just let the OS do it...?
+    hdestroy();
     return 0;
 }

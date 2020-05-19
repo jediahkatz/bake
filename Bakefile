@@ -1,0 +1,8 @@
+bake: src/bake.c parser rule
+	cc -o bake src/bake.c src/parser.c src/rule.c -g -Wall
+
+parser: src/parser.c src/parser.h rule
+
+rule: src/rule.c src/rule.h
+
+all: src/bake.c
