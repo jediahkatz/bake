@@ -12,5 +12,7 @@ RULE_PARSER *init_rule_parser(char *str);
 /** Free the memory associated with a rule parser. Does not free the parsed string. */
 // void free_rule_parser(RULE_PARSER *rparser);
 
-/** Get the next rule, or NULL if there are no rules remaining. */
-RULE *get_next_rule(RULE_PARSER *rparser);
+/** Get the next rule, or NULL if there are no rules remaining.
+ *  Increments n_prerequisites by an upper bound on the number of prerequisites encountered.
+ */
+RULE *get_next_rule(RULE_PARSER *rparser, int *n_prerequisites);

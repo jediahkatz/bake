@@ -15,7 +15,7 @@ RULE_PARSER *init_rule_parser(char *str) {
     return rparser;
 }
 
-RULE *get_next_rule(RULE_PARSER *rparser) {
+RULE *get_next_rule(RULE_PARSER *rparser, int *n_prerequisites) {
     char *startptr = rparser->pos;
     char *endptr;
     int len;
@@ -54,6 +54,8 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
     SLIST_INIT(prereqs);
     PREREQ *prereq_node;
     char *prereq_name;
+
+    int n_prerequisites_incr = 0;
 
     // Extract prereqs
     while (*startptr != '\n') {
@@ -98,6 +100,7 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
         }
         prereq_node->filename = prereq_name;
         SLIST_INSERT_HEAD(prereqs, prereq_node, entries);
+        n_prerequisites_incr++;
 
         startptr = endptr;
     }
@@ -121,5 +124,6 @@ RULE *get_next_rule(RULE_PARSER *rparser) {
     rparser->pos = endptr;
     RULE *rule = init_rule(target, prereqs, recipe);
 
+    *n_prerequisites += n_prerequisites_incr;
     return rule;
 }
